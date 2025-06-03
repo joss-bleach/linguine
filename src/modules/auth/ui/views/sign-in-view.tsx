@@ -1,14 +1,14 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { FaGoogle, FaGithub } from "react-icons/fa";
 import { Loader2Icon, OctagonAlertIcon } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 import { authClient } from "@/lib/auth-client";
 
 import { useForm } from "@tanstack/react-form";
-import { signInSchema } from "@/modules/schema";
+import { signInSchema } from "@/modules/auth/schema";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -36,12 +36,13 @@ export const SignInView = () => {
         {
           email: value.email,
           password: value.password,
+          callbackURL: "/",
         },
         {
           onSuccess: () => {
             form.reset();
-            router.push("/");
             setIsPending(false);
+            router.push("/");
           },
           onError: ({ error }) => {
             setError(error.message);
@@ -51,6 +52,25 @@ export const SignInView = () => {
       );
     },
   });
+
+  const handleOnSocialAuth = (provider: "google" | "github") => {
+    setIsPending(true);
+    authClient.signIn.social(
+      {
+        provider,
+        callbackURL: "/",
+      },
+      {
+        onSuccess: () => {
+          setIsPending(false);
+        },
+        onError: ({ error }) => {
+          setError(error.message);
+          setIsPending(false);
+        },
+      },
+    );
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -152,6 +172,7 @@ export const SignInView = () => {
                   type="button"
                   className="w-full"
                   disabled={isPending || form.state.isSubmitting}
+                  onClick={() => handleOnSocialAuth("google")}
                 >
                   <FaGoogle />
                 </Button>
@@ -159,6 +180,7 @@ export const SignInView = () => {
                   variant="outline"
                   type="button"
                   className="w-full"
+                  onClick={() => handleOnSocialAuth("github")}
                   disabled={isPending || form.state.isSubmitting}
                 >
                   <FaGithub />

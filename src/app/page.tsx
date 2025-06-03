@@ -1,16 +1,17 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
-import { authClient } from "@/lib/auth-client";
+import { getSession } from "@/modules/auth/actions/get-session";
 
-const Page = () => {
-  return (
-    <div>
-      <div>
-        <Button onClick={() => authClient.signOut()}>Sign out</Button>
-      </div>
-    </div>
-  );
+import { HomeView } from "@/modules/home/ui/views/home-view";
+
+const Page = async () => {
+  const session = await getSession();
+
+  if (!session) {
+    redirect("/sign-in");
+  }
+
+  return <HomeView />;
 };
 
 export default Page;
