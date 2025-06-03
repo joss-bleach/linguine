@@ -1,12 +1,11 @@
 "use client";
 import { useState } from "react";
-
+import { FaGoogle, FaGithub } from "react-icons/fa";
+import { Loader2Icon, OctagonAlertIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { authClient } from "@/lib/auth-client";
-
-import { Loader2Icon, OctagonAlertIcon } from "lucide-react";
 
 import { useForm } from "@tanstack/react-form";
 import { signInSchema } from "@/modules/schema";
@@ -18,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 
 export const SignInView = () => {
+  const [isPending, setIsPending] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
@@ -30,6 +30,7 @@ export const SignInView = () => {
       onChange: signInSchema,
     },
     onSubmit: ({ value }) => {
+      setIsPending(true);
       setError(null);
       authClient.signIn.email(
         {
@@ -40,9 +41,11 @@ export const SignInView = () => {
           onSuccess: () => {
             form.reset();
             router.push("/");
+            setIsPending(false);
           },
           onError: ({ error }) => {
             setError(error.message);
+            setIsPending(false);
           },
         },
       );
@@ -57,6 +60,7 @@ export const SignInView = () => {
             onSubmit={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              form.handleSubmit();
             }}
             className="p-6 md:p-8"
           >
@@ -67,7 +71,7 @@ export const SignInView = () => {
                   Login to your account.
                 </p>
               </div>
-              {error && (
+              {!!error && (
                 <Alert className="bg-destructive/10 text-destructive border-none">
                   <OctagonAlertIcon className="h-4 w-4" />
                   <AlertTitle>{error}</AlertTitle>
@@ -127,10 +131,9 @@ export const SignInView = () => {
                   <Button
                     className="w-full"
                     type="submit"
-                    onClick={form.handleSubmit}
-                    disabled={!canSubmit}
+                    disabled={!canSubmit || isPending}
                   >
-                    {isSubmitting ? (
+                    {isSubmitting || isPending ? (
                       <Loader2Icon className="animate-spin" />
                     ) : (
                       "Sign in"
@@ -144,18 +147,28 @@ export const SignInView = () => {
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <Button variant="outline" type="button" className="w-full">
-                  Google
+                <Button
+                  variant="outline"
+                  type="button"
+                  className="w-full"
+                  disabled={isPending || form.state.isSubmitting}
+                >
+                  <FaGoogle />
                 </Button>
-                <Button variant="outline" type="button" className="w-full">
-                  Github
+                <Button
+                  variant="outline"
+                  type="button"
+                  className="w-full"
+                  disabled={isPending || form.state.isSubmitting}
+                >
+                  <FaGithub />
                 </Button>
               </div>
               <div className="text-center text-sm">
                 <p>
                   Don&apos;t have an account?{" "}
                   <Link
-                    className="opacity-90 hover:cursor-pointer hover:underline hover:opacity-100"
+                    className="font-semibold underline opacity-90 hover:cursor-pointer hover:opacity-100"
                     href="/sign-up"
                   >
                     Click here
